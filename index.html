@@ -75,7 +75,8 @@
             ArrowLeft: ({ className }) => (<SvgIcon className={className}><path d="m12 19-7-7 7-7" /><path d="M19 12H5" /></SvgIcon>),
             Globe: ({ className }) => (<SvgIcon className={className}><circle cx="12" cy="12" r="10" /><line x1="2" x2="22" y1="12" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></SvgIcon>),
             Receipt: ({ className }) => (<SvgIcon className={className}><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" /><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8" /><path d="M12 18V6" /></SvgIcon>),
-            Swap: ({ className }) => (<SvgIcon className={className}><path d="m7 15 5 5 5-5" /><path d="M7 9 12 4 17 9" /></SvgIcon>)
+            Swap: ({ className }) => (<SvgIcon className={className}><path d="m7 15 5 5 5-5" /><path d="M7 9 12 4 17 9" /></SvgIcon>),
+            ExternalLink: ({ className }) => (<SvgIcon className={className}><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" /><polyline points="15 3 21 3 21 9" /><line x1="10" x2="21" y1="14" y2="3" /></SvgIcon>)
         };
 
         // --- Tool Components (Embedded inside Data) ---
@@ -354,6 +355,33 @@
             </div>
         );
 
+        // 5. Locker Map Component
+        const LockerMap = () => {
+            const stations = [
+                { name: "難波站", url: "https://coinlocker.click/namba-station.php" },
+                { name: "新大阪站", url: "https://coinlocker.click/shinosaka-station.php" },
+                { name: "天王寺站", url: "https://coinlocker.click/tennoji-station.php" }
+            ];
+
+            return (
+                <div className="space-y-3">
+                    <p className="text-sm text-gray-500 mb-2">點擊前往外部網站查看詳細地圖：</p>
+                    {stations.map((station, index) => (
+                        <a 
+                            key={index}
+                            href={station.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-between w-full p-4 bg-white rounded-xl border-2 border-gray-100 hover:border-blue-200 hover:bg-blue-50 transition-all active:scale-98"
+                        >
+                            <span className="font-bold text-gray-700">{station.name}</span>
+                            <Icons.ExternalLink className="w-4 h-4 text-gray-400" />
+                        </a>
+                    ))}
+                </div>
+            );
+        };
+
         // Weather Utils
         const getWeatherInfo = (code) => {
             if (code === 0) return { icon: "CloudSun", desc: "晴朗" };
@@ -486,6 +514,7 @@
                     { time: "Money", title: "匯率換算", icon: "Calculator", desc: "JPY ↔ TWD 即時換算", component: <CurrencyConverter /> },
                     { time: "Tax", title: "退稅計算", icon: "Receipt", desc: "購物湊單免稅額計算", component: <TaxFreeCalculator /> },
                     { time: "List", title: "檢查清單", icon: "CheckList", desc: "行前與每日物品確認", component: <Checklist /> },
+                    { time: "Locker", title: "置物櫃地圖", icon: "Luggage", desc: "主要車站置物櫃位置", component: <LockerMap /> },
                     { time: "SOS", title: "緊急聯絡", icon: "ShieldAlert", desc: "辦事處電話與求救", component: <EmergencyCard /> }
                 ]
             }
@@ -504,7 +533,7 @@
                         <div className="flex justify-between items-start mb-6">
                             <div className="flex items-center gap-3">
                                 <div className={`p-3 rounded-full ${
-                                    event.time === 'Money' || event.time === 'List' || event.time === 'SOS' || event.time === 'Tax' ? 'bg-gray-100 text-gray-600' :
+                                    event.time === 'Money' || event.time === 'List' || event.time === 'SOS' || event.time === 'Tax' || event.time === 'Locker' ? 'bg-gray-100 text-gray-600' :
                                     event.type === 'transport' ? 'bg-blue-100 text-blue-600' :
                                     event.type === 'hotel' ? 'bg-indigo-100 text-indigo-600' :
                                     'bg-orange-100 text-orange-600'
@@ -682,8 +711,8 @@
                                             <div className="flex justify-between items-start">
                                                 <div className="flex items-start gap-3">
                                                     <div className={`mt-1 p-2 rounded-xl shrink-0 ${
-                                                        event.time === 'Money' || event.time === 'List' || event.time === 'SOS' || event.time === 'Tax' ? 'bg-gray-100 text-gray-600' :
-                                                        event.type === 'transport' ? 'bg-blue-50' : 
+                                                        event.time === 'Money' || event.time === 'List' || event.time === 'SOS' || event.time === 'Tax' || event.time === 'Locker' ? 'bg-gray-100 text-gray-600' :
+                                                        event.type === 'transport' ? 'bg-blue-100 text-blue-600' : 
                                                         event.type === 'alert' ? 'bg-red-50' : 'bg-gray-50'
                                                     }`}>
                                                         <Icon className="w-5 h-5" />
