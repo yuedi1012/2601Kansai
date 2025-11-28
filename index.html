@@ -9,7 +9,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="關西之旅">
-    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/3233/3233497.png">
+    <link rel="apple-touch-icon" href="https://i.meee.com.tw/QzlcnT2.png">
     
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/react@18/umd/react.development.js"></script>
@@ -73,16 +73,19 @@
             Trash: ({ className }) => (<SvgIcon className={className}><path d="M3 6h18" /><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" /><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" /></SvgIcon>),
             Plus: ({ className }) => (<SvgIcon className={className}><path d="M5 12h14" /><path d="M12 5v14" /></SvgIcon>),
             ArrowLeft: ({ className }) => (<SvgIcon className={className}><path d="m12 19-7-7 7-7" /><path d="M19 12H5" /></SvgIcon>),
-            Globe: ({ className }) => (<SvgIcon className={className}><circle cx="12" cy="12" r="10" /><line x1="2" x2="22" y1="12" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></SvgIcon>)
+            Globe: ({ className }) => (<SvgIcon className={className}><circle cx="12" cy="12" r="10" /><line x1="2" x2="22" y1="12" y2="12" /><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" /></SvgIcon>),
+            Receipt: ({ className }) => (<SvgIcon className={className}><path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1Z" /><path d="M16 8h-6a2 2 0 1 0 0 4h4a2 2 0 1 1 0 4H8" /><path d="M12 18V6" /></SvgIcon>),
+            Swap: ({ className }) => (<SvgIcon className={className}><path d="m7 15 5 5 5-5" /><path d="M7 9 12 4 17 9" /></SvgIcon>)
         };
 
         // --- Tool Components (Embedded inside Data) ---
 
         // 1. Currency Converter Component
         const CurrencyConverter = () => {
-            const [jpy, setJpy] = useState('');
-            const [twd, setTwd] = useState('');
+            const [amount, setAmount] = useState('');
+            const [result, setResult] = useState('');
             const [rate, setRate] = useState(null);
+            const [mode, setMode] = useState('JPY_TO_TWD'); // 'JPY_TO_TWD' or 'TWD_TO_JPY'
             const [loading, setLoading] = useState(true);
 
             useEffect(() => {
@@ -92,7 +95,7 @@
                         const data = await res.json();
                         setRate(data.rates.TWD);
                     } catch (e) {
-                        setRate(0.21); // Fallback
+                        setRate(0.2135); // Fallback
                     } finally {
                         setLoading(false);
                     }
@@ -100,32 +103,179 @@
                 fetchRate();
             }, []);
 
-            const handleJpyChange = (e) => {
-                const val = e.target.value;
-                setJpy(val);
-                if (rate && val) setTwd((parseFloat(val) * rate).toFixed(0));
-                else setTwd('');
+            useEffect(() => {
+                if (!rate || !amount) {
+                    setResult('');
+                    return;
+                }
+                
+                if (mode === 'JPY_TO_TWD') {
+                    setResult((parseFloat(amount) * rate).toFixed(0));
+                } else {
+                    setResult((parseFloat(amount) / rate).toFixed(0));
+                }
+            }, [amount, rate, mode]);
+
+            const toggleMode = () => {
+                setMode(prev => prev === 'JPY_TO_TWD' ? 'TWD_TO_JPY' : 'JPY_TO_TWD');
+                setAmount(''); // Clear input on swap for clarity
             };
 
+            const displayRate = mode === 'JPY_TO_TWD' 
+                ? `1 JPY ≈ ${rate ? rate.toFixed(4) : '...'} TWD`
+                : `1 TWD ≈ ${rate ? (1/rate).toFixed(4) : '...'} JPY`;
+
             return (
-                <div className="space-y-4">
-                    <div className="text-sm text-gray-500 text-right">
-                        匯率: 1 JPY ≈ {rate ? rate.toFixed(4) : '...'} TWD
-                    </div>
-                    <div>
-                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">日幣 (JPY)</label>
-                        <input type="number" value={jpy} onChange={handleJpyChange} placeholder="輸入金額" className="w-full p-3 bg-gray-50 rounded-xl border border-gray-200 focus:outline-none focus:border-blue-500 text-lg font-bold" />
+                <div className="space-y-6">
+                    <div className="flex justify-between items-center text-sm text-gray-500 bg-gray-50 px-3 py-2 rounded-lg">
+                        <span>即時匯率</span>
+                        <span className="font-mono font-bold text-gray-700">{displayRate}</span>
                     </div>
                     
-                    <div>
-                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">台幣 (TWD)</label>
-                        <div className="w-full p-3 bg-blue-50 rounded-xl border border-blue-100 text-blue-800 text-2xl font-bold">{twd || '0'}</div>
+                    <div className="relative">
+                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                            {mode === 'JPY_TO_TWD' ? '日幣 (JPY)' : '台幣 (TWD)'}
+                        </label>
+                        <input 
+                            type="number" 
+                            value={amount} 
+                            onChange={(e) => setAmount(e.target.value)} 
+                            placeholder="輸入金額" 
+                            className="w-full p-4 bg-white rounded-xl border-2 border-blue-100 focus:outline-none focus:border-blue-500 text-2xl font-bold text-gray-800 transition-colors" 
+                        />
+                        
+                        {/* Swap Button */}
+                        <div className="absolute left-1/2 -bottom-5 transform -translate-x-1/2 z-10">
+                            <button 
+                                onClick={toggleMode}
+                                className="bg-white border-2 border-gray-100 p-2 rounded-full shadow-sm text-blue-500 hover:bg-blue-50 hover:border-blue-200 transition-all active:scale-95"
+                            >
+                                <Icons.Swap className="w-5 h-5" />
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div className="pt-2">
+                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                            {mode === 'JPY_TO_TWD' ? '台幣 (TWD)' : '日幣 (JPY)'}
+                        </label>
+                        <div className="w-full p-4 bg-blue-50 rounded-xl border border-blue-100 text-blue-800 text-3xl font-black">
+                            {result || '0'}
+                        </div>
                     </div>
                 </div>
             );
         };
 
-        // 2. Checklist Component
+        // 2. Tax Free Calculator Component
+        const TaxFreeCalculator = () => {
+            const [amount, setAmount] = useState('');
+            const [type, setType] = useState('excluded'); // 'excluded' (未稅) or 'included' (含稅)
+            
+            const THRESHOLD_EXCLUDED = 5000;
+            const THRESHOLD_INCLUDED = 5500;
+            const TAX_RATE = 0.1;
+
+            const calculate = () => {
+                const val = parseFloat(amount);
+                if (!val) return { reached: false, diff: 0, refund: 0 };
+
+                let currentExcluded = 0;
+                let currentIncluded = 0;
+
+                if (type === 'excluded') {
+                    currentExcluded = val;
+                    currentIncluded = val * (1 + TAX_RATE);
+                } else {
+                    currentIncluded = val;
+                    currentExcluded = val / (1 + TAX_RATE);
+                }
+
+                if (currentExcluded >= THRESHOLD_EXCLUDED) {
+                    return {
+                        reached: true,
+                        diff: 0,
+                        refund: Math.floor(currentExcluded * TAX_RATE) // Approximate refund (consumption tax)
+                    };
+                } else {
+                    return {
+                        reached: false,
+                        diff: type === 'excluded' ? Math.ceil(THRESHOLD_EXCLUDED - currentExcluded) : Math.ceil(THRESHOLD_INCLUDED - currentIncluded),
+                        refund: 0
+                    };
+                }
+            };
+
+            const result = calculate();
+
+            return (
+                <div className="space-y-6">
+                    {/* Toggle */}
+                    <div className="flex bg-gray-100 p-1 rounded-xl">
+                        <button 
+                            className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${type === 'excluded' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-400'}`}
+                            onClick={() => setType('excluded')}
+                        >
+                            未稅金額
+                        </button>
+                        <button 
+                            className={`flex-1 py-2 rounded-lg text-sm font-bold transition-all ${type === 'included' ? 'bg-white shadow-sm text-blue-600' : 'text-gray-400'}`}
+                            onClick={() => setType('included')}
+                        >
+                            含稅金額
+                        </button>
+                    </div>
+
+                    {/* Input */}
+                    <div>
+                        <label className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-1">
+                            商品總額 (JPY)
+                        </label>
+                        <input 
+                            type="number" 
+                            value={amount} 
+                            onChange={(e) => setAmount(e.target.value)} 
+                            placeholder={type === 'excluded' ? "輸入標籤上的未稅價" : "輸入含稅總價"}
+                            className="w-full p-4 bg-white rounded-xl border-2 border-indigo-100 focus:outline-none focus:border-indigo-500 text-2xl font-bold text-gray-800" 
+                        />
+                    </div>
+
+                    {/* Result Card */}
+                    <div className={`p-5 rounded-2xl border-2 transition-colors ${
+                        !amount ? 'bg-gray-50 border-gray-100' :
+                        result.reached ? 'bg-green-50 border-green-200' : 'bg-orange-50 border-orange-200'
+                    }`}>
+                        {!amount ? (
+                            <div className="text-center text-gray-400 text-sm">請輸入金額開始計算</div>
+                        ) : result.reached ? (
+                            <div className="text-center space-y-1">
+                                <div className="text-green-600 font-bold text-lg flex items-center justify-center gap-2">
+                                    <span className="bg-green-100 p-1 rounded-full"><Icons.X className="w-4 h-4 rotate-45" /></span>
+                                    已達免稅門檻！
+                                </div>
+                                <div className="text-green-800 text-sm">
+                                    預計可退稅約 <span className="text-2xl font-black">¥{result.refund.toLocaleString()}</span>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="text-center space-y-1">
+                                <div className="text-orange-600 font-bold text-lg">還差一點點！</div>
+                                <div className="text-orange-800 text-sm">
+                                    再買 <span className="text-2xl font-black">¥{result.diff.toLocaleString()}</span> 即可免稅
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                    
+                    <div className="text-xs text-gray-400 text-center">
+                        * 免稅門檻：未稅 ¥5,000 / 含稅 ¥5,500 <br/>
+                        * 實際退稅金額依店家手續費而異
+                    </div>
+                </div>
+            );
+        };
+
+        // 3. Checklist Component
         const Checklist = () => {
             const [items, setItems] = useState([
                 { id: 1, text: "護照", checked: false, type: 'pre' },
@@ -176,7 +326,7 @@
             );
         };
 
-        // 3. Emergency Card Component
+        // 4. Emergency Card Component
         const EmergencyCard = () => (
             <div className="space-y-4">
                 <div className="bg-red-50 p-4 rounded-xl border border-red-100">
@@ -331,9 +481,10 @@
                 color: "bg-gray-500",
                 ticket: "隨身工具",
                 startTime: "隨時",
-                tips: "包含匯率換算、檢查清單與緊急聯絡卡，可離線使用。",
+                tips: "包含匯率換算、退稅計算機、檢查清單與緊急聯絡卡。",
                 events: [
                     { time: "Money", title: "匯率換算", icon: "Calculator", desc: "JPY ↔ TWD 即時換算", component: <CurrencyConverter /> },
+                    { time: "Tax", title: "退稅計算", icon: "Receipt", desc: "購物湊單免稅額計算", component: <TaxFreeCalculator /> },
                     { time: "List", title: "檢查清單", icon: "CheckList", desc: "行前與每日物品確認", component: <Checklist /> },
                     { time: "SOS", title: "緊急聯絡", icon: "ShieldAlert", desc: "辦事處電話與求救", component: <EmergencyCard /> }
                 ]
@@ -353,7 +504,7 @@
                         <div className="flex justify-between items-start mb-6">
                             <div className="flex items-center gap-3">
                                 <div className={`p-3 rounded-full ${
-                                    event.time === 'Money' || event.time === 'List' || event.time === 'SOS' ? 'bg-gray-100 text-gray-600' :
+                                    event.time === 'Money' || event.time === 'List' || event.time === 'SOS' || event.time === 'Tax' ? 'bg-gray-100 text-gray-600' :
                                     event.type === 'transport' ? 'bg-blue-100 text-blue-600' :
                                     event.type === 'hotel' ? 'bg-indigo-100 text-indigo-600' :
                                     'bg-orange-100 text-orange-600'
@@ -531,7 +682,7 @@
                                             <div className="flex justify-between items-start">
                                                 <div className="flex items-start gap-3">
                                                     <div className={`mt-1 p-2 rounded-xl shrink-0 ${
-                                                        event.time === 'Money' || event.time === 'List' || event.time === 'SOS' ? 'bg-gray-100 text-gray-600' :
+                                                        event.time === 'Money' || event.time === 'List' || event.time === 'SOS' || event.time === 'Tax' ? 'bg-gray-100 text-gray-600' :
                                                         event.type === 'transport' ? 'bg-blue-50' : 
                                                         event.type === 'alert' ? 'bg-red-50' : 'bg-gray-50'
                                                     }`}>
